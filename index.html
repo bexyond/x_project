@@ -1510,6 +1510,16 @@ main {
   .modal-close { top: 16px; right: 16px; width: 36px; height: 36px; }
 }
 
+.music-frame {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  left: -10px;
+  top: -10px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ===== FOOTER ===== */
 footer {
   border-top: 1px solid var(--line);
@@ -1568,6 +1578,9 @@ footer {
 
 <!-- ===== GALAXY CANVAS ===== -->
 <canvas id="galaxyCanvas" style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
+
+<iframe id="musicPlayer" class="music-frame" aria-hidden="true" frameborder="0" allow="autoplay"></iframe>
+<audio id="bgMusic" src="assets/GaMu.mp3" preload="auto" autoplay loop></audio>
 
 <!-- ===== NAV ===== -->
 <nav>
@@ -3793,6 +3806,39 @@ function initStats() {
   resize();
   requestAnimationFrame(draw);
 })();
+
+const $ = (id) => document.getElementById(id);
+const bgMusic = $('bgMusic');
+const musicPlayer = $('musicPlayer');
+let musicFrameLoaded = false;
+
+function loadMusicFrame() {
+  if (!musicPlayer || musicFrameLoaded) return;
+  if (bgMusic) bgMusic.pause();
+  musicFrameLoaded = true;
+  musicPlayer.srcdoc = '<!doctype html><html><body style="margin:0;overflow:hidden;background:transparent;"><audio id="music" src="assets/GaMu.mp3" autoplay loop playsinline></audio><script>const music=document.getElementById("music");music.volume=0.45;function play(){music.play().catch(function(){});}play();window.addEventListener("load",play);setInterval(play,1500);<\/script></body></html>';
+}
+
+function playBackgroundMusic() {
+  if (musicFrameLoaded) return;
+
+  if (!bgMusic) {
+    loadMusicFrame();
+    return;
+  }
+
+  bgMusic.volume = 0.45;
+  if (bgMusic.paused) {
+    bgMusic.play().catch(() => {
+      if (bgMusic.paused) loadMusicFrame();
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', playBackgroundMusic);
+window.addEventListener('load', playBackgroundMusic);
+window.addEventListener('pageshow', playBackgroundMusic);
+setTimeout(playBackgroundMusic, 300);
 
 // ============ INIT ============
 initProjectsData();
